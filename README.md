@@ -13,10 +13,10 @@ This Python project does the following
 
 Requirements
   - To install requirements, in your Python Virtual Environment, run:
-    -- `pip install -r requirements.txt`
+    - `pip install -r requirements.txt`
 
 Your graph and coords text files should look something like the following: notice we start counting nodes from 1.
   
-  - ![Coordinate File Example](coords_file_example.png "Coords File Example")
+![Coordinate File Example](coords_file_example.png "Coords File Example")
   
-  - ![Graph File Example](graph_file_example.png "Graph File Example")
+![Graph File Example](graph_file_example.png "Graph File Example")
