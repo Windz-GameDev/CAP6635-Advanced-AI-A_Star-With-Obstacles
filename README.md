@@ -8,7 +8,7 @@ This Python project does the following
   - Node IDs are integers
   - Edge weights are calculated based on the nodes' coordinates, or the Euclidean distance between two nodes
   - If there is an edge between nodes a and b, an edge is not added for b and a.
-  - The program also displays the graph
+  - The program also displays the graph using matplotlib
   - Additionally, the program implements the A* algorithm, allowing the user to find the shortest path between two nodes on the graph. Additionally the user can block nodes to represent real world obstacles.
 
 Requirements
