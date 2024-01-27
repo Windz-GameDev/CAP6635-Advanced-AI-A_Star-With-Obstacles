@@ -1,7 +1,7 @@
 Project 1 for Advanded AI Class
 
 This Python project does the following
--Reads the x-y coordinates of the nodes from a text file called "coords.txt"
+  -Reads the x-y coordinates of the nodes from a text file called "coords.txt"
 -Reads an adjacency list of an undirected graph from a text file called "graph.txt" in the project directory. This is used to create the edges.
 --Note : If an edge includes a point in graph.txt, coords for that point must exist in coords.txt!
 -Uses the iGraph library for Python to create the graph
