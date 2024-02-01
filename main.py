@@ -38,16 +38,14 @@ try:
 except FileNotFoundError:
     print("Ensure both coords.txt and graph.txt are present in your project directory")
 
-'''
+# Debugging statements to ensure graph data is stored correctly
 
-    Debugging statements to ensure graph data is stored correctly
+print(node_coordinates)
+print(edges)
+print(edge_attributes)
+print(num_nodes)
+print(['blue' for node in range(num_nodes)])
 
-    print(node_coordinates)
-    print(edges)
-    print(edge_attributes)
-    print(num_nodes)
-    print(['blue' for node in range(num_nodes)])
-'''
 
 
 g = igraph.Graph(
@@ -124,6 +122,9 @@ for vertex in g.vs:
     if vertex.index in blocked_set:
         g.vs[vertex.index]["color"] = "red" # Nodes that can not be traveled to are marked in red 
 
+vertex_edges = g.incident(4)
+print(f" Edges for 4 {vertex_edges}") # Get neighbors of this vertex)
+
 g2 = g.copy() # Used for testing official solution, save a copy of the original graph before we change it to be used for igraph solution
 
 class Node:
@@ -155,8 +156,12 @@ heapq.heappush(priority_queue, initial_node_solution) # Add a path with only a s
 min_complete_solution = None
 
 while (priority_queue):
+    
     current_node_solution = heapq.heappop(priority_queue) # Enqueue starting solution 
     current_location_in_solution = current_node_solution.path[-1] # Get the last node in the solution
+    
+    print(f"Current solution : {current_node_solution.path}")
+    
     if current_location_in_solution == goal_node: # If the last node's solution represents us having reached the goal vertex at the end, then we have the solution, as our heuristic is admissable since we use Euclidean distance. 
         min_complete_solution = current_node_solution
         break
@@ -166,22 +171,32 @@ while (priority_queue):
     # This means that we should not expand it again as any solutions resulting from this vertex again would only have a worse cost.
     if current_location_in_solution not in extended: 
         extended.add(current_location_in_solution) # Add it to our extended set so we don't extend it again
+        print(current_location_in_solution)
         vertex_edges = g.incident(current_location_in_solution) # Get neighbors of this vertex
         for edge in vertex_edges: # For each of our neighbors
             
             edge = g.es[edge] # Get access to edge data
-            if g.vs[edge.target]["color"] == "red": # If target node is blocked, we can't travel to it, move on to next neighor, if any
+            print(f"Checking vertex {edge.target} : edges : {edge.source} {edge.target}")
+
+            if current_location_in_solution == edge.source:
+                target = edge.target
+            else:
+                target = edge.source
+
+            # If target node is blocked, or already in our path, we can't travel to it, move on to next neighor, if any
+            if g.vs[target]["color"] == "red" or target in current_node_solution.path: 
+                print(f"{target} is blocked")
                 continue # It's in our blocked set 
 
             # Distance to reach neighbor vertex from current vertex     
             accumulated_distance = current_node_solution.accumulated_distance + edge['weight'] 
             
             # Distance the neighbor is from the goal
-            heuristic = node_2D_distance_to_goal[edge.target] 
+            heuristic = node_2D_distance_to_goal[target] 
 
             # New path
             new_path = [element for element in current_node_solution.path]
-            new_path.append(edge.target)
+            new_path.append(target)
 
             # Store accumulated distance to that node, priority for dequeing it, and the current solution represented by it
             neighbor_node = Node(accumulated_distance, heuristic, new_path) 
