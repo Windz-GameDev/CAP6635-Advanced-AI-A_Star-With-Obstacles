@@ -99,8 +99,8 @@ while True:
 
 blocked_set = set()
 
-try:
-    while True:
+while True:
+    try:
         blocked_node = int(input("Please enter the integer ID of the node you want to block. Enter -1 to stop blocking nodes: ")) - 1
         if blocked_node == -2:
             break
@@ -110,9 +110,9 @@ try:
             raise ValueError("You can not block a starting node or a goal node.")
         else:
             blocked_set.add(blocked_node)
-            print(f"Node {blocked_node} was added to the blocked set, it will not be traveled to in the constructed path.")
-except ValueError as exception:
-    print(f"Invalid input: {exception}")
+            print(f"Node {blocked_node + 1} was added to the blocked set, it will not be traveled to in the constructed path.")
+    except ValueError as exception:
+        print(f"Invalid input: {exception}")
                                   
 node_2D_distance_to_goal = {}
 goal_node_coordinates = node_coordinates[goal_node]
@@ -193,9 +193,9 @@ while (priority_queue):
 
 
 if min_complete_solution == None:
-    print("A path is not possible with current obstacles.")
+    print("A path could not be found with the existing edges and / or obstacles using this project's solution.")
 else:
-    print("The following is the optimal path, in order of vertexes visited")
+    print("The following is the optimal path found by this project's implementation, in order of vertexes visited: ")
     print([v + 1 for v in min_complete_solution.path])
     for node in min_complete_solution.path:
         g.vs[node]["color"] = "green" # Set nodes traveled to in solution to green
@@ -203,17 +203,28 @@ else:
 # Plot the graph with the solution
 igraph.plot(g, "graph_visualizations/my_solution.png")
 
-g2_copy = g2.copy() # Delete blocked nodes for path finding
-g2_copy.delete_vertices(blocked_set)
+# Essentially block nodes by setting weights connected to them to infinity
+for node in blocked_set:
+    edges = list(g2.es.select(_source=node)) + list(g2.es.select(_target=node)) # Essentially get all edges where blocked node is a source or target
+    for edge in edges:
+        edge['weight'] = float('inf')
 
 # Built in iGraph solution using Dijkstra's algorithm to verify results 
-library_solution_paths = g2_copy.get_shortest_paths(v=starting_node, to=goal_node, weights=g2_copy.es['weight'], output="vpath")
+library_solution_paths = g2.get_shortest_paths(v=starting_node, to=goal_node, weights=g2.es['weight'], output="vpath")
 first_path = [v + 1 for v in library_solution_paths[0]]
 
-print(f"The first path provided by the offical igraph shortest paths function: ")
-print(first_path)
+valid_path = True
 for node in first_path:
-        g2.vs[node - 1]["color"] = "green" # Set nodes traveled to in solution to green
+    if node - 1 in blocked_set: # Subtract by one to get the actual index since iGraph indexes start at 0
+        valid_path = False
+if valid_path:
+    print(f"The first path provided by the offical igraph shortest paths function: ")
+    print(first_path)
+    for node in first_path:
+            g2.vs[node - 1]["color"] = "green" # Set nodes traveled to in solution to green
+else:
+    print("Solution could not be found with the existing edges or blocked obstacles using the iGraph solution.")
 
-# Plot the graph with the solution
+
+# Plot the graph with the solution if any, otherwise print original graph with blocked nodes
 igraph.plot(g2, "graph_visualizations/official_igraph_solution.png")
