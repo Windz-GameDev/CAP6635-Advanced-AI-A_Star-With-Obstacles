@@ -128,16 +128,22 @@ print(f" Edges for 4 {vertex_edges}") # Get neighbors of this vertex)
 g2 = g.copy() # Used for testing official solution, save a copy of the original graph before we change it to be used for igraph solution
 
 class Node:
-    def __init__(self, accumulated_distance, heuristic, path):
+    def __init__(self, edge_weight, accumulated_distance, heuristic, id, parent):
         
+        # Edge weight from parent to current node, used for getting final weight in path construction
+        self.edge_weight = edge_weight
+
         # Keep track of cost to reach node so far
         self.accumulated_distance = accumulated_distance 
         
         # A node's priority in terms of when it should be expanded is determined by cost to reach that node, and how far the goal is the node from the goal based on some heuristic
         self.priority = accumulated_distance + heuristic 
-        
-        # Store solution represented by this path
-        self.path = path
+       
+        # Node Vertex ID
+        self.id = id
+
+        # Get parent
+        self.parent = parent
 
     # Define less than method for comparison in priority queue
     def __lt__(self, other):
@@ -147,59 +153,73 @@ class Node:
 extended = set()
 priority_queue = []
 
-# Starting solution, contains an accumulated distance of zero, and priority in dequeing is determined by node's distance to goal, initial path solution only contains start node so not complete
-initial_node_solution = Node(0, node_2D_distance_to_goal[starting_node], [starting_node]) 
+# Starting solution, contains an accumulated distance of zero, and priority in dequeing is determined by node's distance to goal
+initial_node_solution = Node(0, 0, node_2D_distance_to_goal[starting_node], starting_node, None) 
 heapq.heappush(priority_queue, initial_node_solution) # Add a path with only a starting node to priority queue
 
 # If we find the goal, and our heuristic is admissable, A* will give the optimal solution when the goal is first found. 
 # Note that, in addition to the cost to reach that node, we use Euclidean distance or straight line distance for determining a node's future potential. 
 min_complete_solution = None
-
+total_path_cost = 0
+final_accumulated_distance = 0
+final_priority = 0
 while (priority_queue):
     
-    current_node_solution = heapq.heappop(priority_queue) # Enqueue starting solution 
-    current_location_in_solution = current_node_solution.path[-1] # Get the last node in the solution
+    current_node = heapq.heappop(priority_queue) # Enqueue starting solution 
+    current_location = current_node.id # Get the vertex location represented by popped node
     
-    print(f"Current solution : {current_node_solution.path}")
-    
-    if current_location_in_solution == goal_node: # If the last node's solution represents us having reached the goal vertex at the end, then we have the solution, as our heuristic is admissable since we use Euclidean distance. 
-        min_complete_solution = current_node_solution
+    if current_location == goal_node: # If the last node's solution represents us having reached the goal vertex at the end, then we have the solution, as our heuristic is admissable since we use Euclidean distance. 
+        
+        # We reached the goal so solution is not none
+        min_complete_solution = []
+
+        # Recursively construct the path by using recursion, i.e go to node used to reach the goal node, then node used to reach that node, etc, all the way to the beginning.
+        def construct_path(node_to_add):    
+            # If we can't go further back return, and start constructing the path
+            if node_to_add == None:
+                return 0
+
+            # Cost so far to connect the previous nodes
+            cost_so_far = construct_path(node_to_add.parent)
+
+            # Add node to path
+            min_complete_solution.append(node_to_add.id)
+
+            # Return cost so far + cost to reach this node from it's parent
+            return cost_so_far + node_to_add.edge_weight
+        total_path_cost = construct_path(current_node)
+        final_accumulated_distance = current_node.accumulated_distance
+        final_priority = current_node.priority
+
         break
 
     # If a vertex has already been extended, that means it was dequeued before at a higher priority (lower cost). 
     # That means we reached it previously with a lower accumlated cost because the heuristic for this vertex is the same.
     # This means that we should not expand it again as any solutions resulting from this vertex again would only have a worse cost.
-    if current_location_in_solution not in extended: 
-        extended.add(current_location_in_solution) # Add it to our extended set so we don't extend it again
-        print(current_location_in_solution)
-        vertex_edges = g.incident(current_location_in_solution) # Get neighbors of this vertex
-        for edge in vertex_edges: # For each of our neighbors
-            
+    if current_location not in extended: 
+        
+        extended.add(current_location) # Add it to our extended set so we don't extend it again
+        vertex_edges = g.incident(current_location) # Get neighbors of this vertex
+        
+        for edge in vertex_edges: # For each of our neighbors    
             edge = g.es[edge] # Get access to edge data
-            print(f"Checking vertex {edge.target} : edges : {edge.source} {edge.target}")
-
-            if current_location_in_solution == edge.source:
+            if current_location == edge.source:
                 target = edge.target
             else:
                 target = edge.source
 
-            # If target node is blocked, or already in our path, we can't travel to it, move on to next neighor, if any
-            if g.vs[target]["color"] == "red" or target in current_node_solution.path: 
-                print(f"{target} is blocked")
-                continue # It's in our blocked set 
+            # If target node is blocked we can't travel to it. If it's already been extended, no point in adding it to the priority queue because it won't be extended
+            if g.vs[target]["color"] == "red" or target in extended: 
+                continue # It's in our blocked set or has already been extended
 
             # Distance to reach neighbor vertex from current vertex     
-            accumulated_distance = current_node_solution.accumulated_distance + edge['weight'] 
+            accumulated_distance = current_node.accumulated_distance + edge['weight'] 
             
             # Distance the neighbor is from the goal
             heuristic = node_2D_distance_to_goal[target] 
 
-            # New path
-            new_path = [element for element in current_node_solution.path]
-            new_path.append(target)
-
-            # Store accumulated distance to that node, priority for dequeing it, and the current solution represented by it
-            neighbor_node = Node(accumulated_distance, heuristic, new_path) 
+            # Store weight to reach this node from parent, accumulated distance to this node, heuristic distance from goal, priority for dequeing it, node id, and it's parent
+            neighbor_node = Node(edge['weight'], accumulated_distance, heuristic, target, current_node) 
 
             # Store neighbor node so it can be dequeued later
             heapq.heappush(priority_queue, neighbor_node)
@@ -211,9 +231,12 @@ if min_complete_solution == None:
     print("A path could not be found with the existing edges and / or obstacles using this project's solution.")
 else:
     print("The following is the optimal path found by this project's implementation, in order of vertexes visited: ")
-    print([v + 1 for v in min_complete_solution.path])
-    for node in min_complete_solution.path:
+    print([v + 1 for v in min_complete_solution])
+    for node in min_complete_solution:
         g.vs[node]["color"] = "green" # Set nodes traveled to in solution to green
+    print(f"Cost: {total_path_cost}")
+    print(f"Accumulated Distance: {final_accumulated_distance}")
+    print(f"Final Priority: {final_priority}")
 
 # Plot the graph with the solution
 igraph.plot(g, "graph_visualizations/my_solution.png")
@@ -228,15 +251,22 @@ for node in blocked_set:
 library_solution_paths = g2.get_shortest_paths(v=starting_node, to=goal_node, weights=g2.es['weight'], output="vpath")
 first_path = [v + 1 for v in library_solution_paths[0]]
 
+# Get cost of starting node to goal node using Dijkstra's algorithm (assuming all weights are non negative)
+library_solution_cost = g2.distances(starting_node, goal_node, weights=g2.es['weight'])
+
+# Extract cost from 2D array, which has one row and one column. The element at [0][0] is the distance between the start, and target vertex.
+final_cost = library_solution_cost[0][0]
+
 valid_path = True
 for node in first_path:
     if node - 1 in blocked_set: # Subtract by one to get the actual index since iGraph indexes start at 0
         valid_path = False
 if valid_path:
-    print(f"The first path provided by the offical igraph shortest paths function: ")
+    print(f"The first path provided by the offical igraph shortest paths function (uses Dijkstra's algorithm for non negative weights): ")
     print(first_path)
     for node in first_path:
             g2.vs[node - 1]["color"] = "green" # Set nodes traveled to in solution to green
+    print(f"Cost returned by libary solution: {final_cost}")
 else:
     print("Solution could not be found with the existing edges or blocked obstacles using the iGraph solution.")
 
