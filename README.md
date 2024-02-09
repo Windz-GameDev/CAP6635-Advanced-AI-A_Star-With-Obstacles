@@ -62,5 +62,6 @@ Troubleshooting
 - When choosing which nodes to start from, end on, or block, ensure you enter their IDs as displayed in `original_graph.png`.
 
 Acknowledgements 
-- The following free MIT video on Youtube from Patrick Winston, was extremely helpful for understanding the logic behind A*, and was used as a reference as I was writing the logic for the A* code.
+- My professor, Dr. Ayan Dutta for introducing me to A* during class, answering my questions, and providing valuable suggestions for optimizing my implementation.
+- The following free MIT video on Youtube from Patrick Winston, was extremely helpful for further understanding the logic behind A*, and was used as a reference as I was writing the logic for the A* code.
   - https://www.youtube.com/watch?v=gGQ-vAmdAOI&t=2306s
