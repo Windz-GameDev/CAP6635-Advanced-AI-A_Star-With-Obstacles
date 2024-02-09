@@ -1,4 +1,4 @@
-This is my A*, Project 1 implementation for the Advanced AI Class I am taking at the University of North Florida while undertaking my Masters in CS.
+This is my implementation for A*, a widely used, informed, pathfinding algorithm which uses a combination of accumulated and heuristic costs to make more intelligent decisions than simple DFS or BFS. The algorithm is particularly useful for robotics and is a cornerstone in the field of Artificial Intelligence. This project was created for the Advanced AI Class I am taking at the University of North Florida while undertaking my Masters in CS.
 
 This Python project does the following
   - Reads the x-y coordinates of the nodes from a text file called "coords.txt".
@@ -34,7 +34,7 @@ Preparing Your Data
 - Prepare two text files in the project directory: coords.txt for node coordinates and graph.txt, which is formatted as an adjacency list.
 - The coords.txt file should list each node's ID followed by its x and y coordinates, separated by spaces. Start counting nodes from 1.
 - The graph.txt file should list each node's ID followed by the IDs of nodes it is connected to, representing the graph's edges.
-- Note: Vertex IDs must be integers, or you will return into issues. X and Y coordinates may be floats or integers.
+- Note: Vertex IDs must be integers, or you will run into issues. X and Y coordinates may be floats or integers.
 
 Your graph and coords text files should look like the following: notice we start counting nodes from 1. Note: Do not count from 0 in your input.
   
@@ -60,3 +60,7 @@ Troubleshooting
 - If the program cannot find a path, verify that the starting and goal nodes are connected and that not too many nodes are blocked.
 - Ensure vertex indexes start counting from 1 in your input files.
 - When choosing which nodes to start from, end on, or block, ensure you enter their IDs as displayed in `original_graph.png`.
+
+Acknowledgements 
+- The following free MIT video on Youtube from Patrick Winston, was extremely helpful for understanding the logic behind A*, and was used as a reference as I was writing the logic for the A* code.
+  - https://www.youtube.com/watch?v=gGQ-vAmdAOI&t=2306s
