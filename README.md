@@ -51,9 +51,9 @@ Running the Program
 Viewing the Results
 - After running the program, check the `graph_visualizations` folder in the project directory for the generated visualization images. These images will show the original graph and the calculated shortest path.
 - The images are saved as `original_graph.png` for the initial graph visualization, `my_solution.png` for my A* implementation, and `official_igraph_solution.png` for the path returned back the iGraph Dijkstra implementation. 
-- The visited nodes are highlighted in green while the blocked nodes in the solutions, while the blocked nodes are highlighted in red.
+- The visited nodes are highlighted in green in the solutions, while the blocked nodes are highlighted in red.
 - The exact path order can seen in the lists in the console. 
-  - Note, it is possible my path solution, and the iGraph path may return a different order, however the total cost should be the same.
+  - Note: it is possible my path, and the iGraph solution path may be different, however the total cost should be the same.
 
 Troubleshooting
 - Ensure that all node IDs in graph.txt have corresponding coordinates in coords.txt.
