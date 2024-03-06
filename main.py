@@ -89,7 +89,6 @@ except FileNotFoundError:
     print(num_nodes)
     print(['blue' for node in range(num_nodes)])
 '''
-
 # Create our iGraph graph for visualization and A* calculation using the input data
 # Note all nodes start as blue
 g = igraph.Graph(
@@ -353,4 +352,3 @@ else: # Otherwise, inform them it couldn't be found
 
 # Plot the graph with the solution if any, otherwise print original graph with blocked nodes
 igraph.plot(g2, "graph_visualizations/official_igraph_solution.png")
-
