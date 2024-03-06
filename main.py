@@ -21,21 +21,53 @@ seen_edges = set() # We use this to make sure we don't store an edge twice
 edge_attributes = {'weight': []} # Store weights for the edges. Will be placed in the same order as edges are calculated.
 num_nodes = 0 # Keep track of the number of nodes as we read the number of coordinates
 
+# We use this to switch between the user's indexing and iGraph's 0 based indexing
+coords_start_index = None
+
+# Ensure vertexes are provided in order in the input file
+vertexes = []
+
 # Read, and store graph + coordinate data. Use data to create edges and weights to be later used as input for the iGraph graph.
 try:
     with open('coords.txt') as coords:
-        for entry in coords:
+        
+        # Get starting index so we can subtract each ID by the start index to ensure vertexes are indexed starting from 0
+        coords_start_index = int(coords.readline().split()[0])
+
+        if coords_start_index < 0:
+            raise ValueError("Ensure your starting vertex ID is an integer of value 0 or greater in coords.txt.")
+
+        # Reset file pointer to start of the file
+        coords.seek(0)
+
+        for i, entry in enumerate(coords):
             num_nodes += 1 # For every line we have another node and it's coordinates, increment counter for input to iGraph graph.
             vertex_data = entry.split() # Split vertex id, x coordinate, and y coordinate into elements of an array
-            vertex, x_coordinate, y_coordinate = int(vertex_data[0]), float(vertex_data[1]), float(vertex_data[2]) # Store them into variables of the correct data type
-            node_coordinates[vertex - 1] = (x_coordinate, y_coordinate) # Store this element and it's coordinates in a hash table for future calculations
+            vertex, x_coordinate, y_coordinate = int(vertex_data[0]) - coords_start_index, float(vertex_data[1]), float(vertex_data[2]) # Store them into variables of the correct data type
+
+            if len(vertexes) == 0:
+                vertexes.append(vertex)
+            elif vertex == vertexes[-1] + 1:
+                vertexes.append(vertex)
+            else:
+                raise ValueError(f"In coords.txt on line {i + 1}, vertex {vertex} is not one greater than {vertexes[-1]} ")
+
+            node_coordinates[vertex] = (x_coordinate, y_coordinate) # Store this element and it's coordinates in a hash table for future calculations
 
     with open('graph.txt') as graph:
-        for entry in graph: # Get the vertex and connected nodes
+        for i, entry in enumerate(graph): # Get the vertex and connected nodes
             vertex_data = entry.split() # Split the vertex and connected nodes into elements of an array
-            vertex = int(vertex_data[0]) - 1 # First element is the vertex, in iGraph we start indexing from 0, however this is abstracted from the user
+            vertex = int(vertex_data[0]) - coords_start_index # First element is the vertex, in iGraph we start indexing from 0, however this is abstracted from the user. Subtract starting index to store data as 0 index based.
+            
+            # Make sure starting vertex exist
+            if not(vertex < num_nodes) or not(vertex >= 0):
+                raise ValueError(f"Coordinates were not provided for vertex {vertex + coords_start_index} on line {i + 1} in graph.txt.")
+
             for data in vertex_data[1: len(vertex_data)]: # Ensure an edge is created for every corrected node
-                destination = int(data) - 1 # Indexes start from 0 in iGraph
+                destination = int(data) - coords_start_index # Indexes start from 0 in iGraph
+
+                if not(destination < num_nodes) or not(destination >= 0):
+                    raise ValueError(f"Coordinates were not provided for destination {destination + coords_start_index} on line {i + 1} in graph.txt.")
 
                 # Edge A <-> B is the same as B <-> A, so we sort the edge and check to see if it's already been added.
                 edge = tuple(sorted([vertex, destination]))
@@ -45,9 +77,9 @@ try:
                     edges.append(edge) # If it's an unseen edge, store it in the edges list 
                     distance = calculate_euclidean_distance(node_coordinates[vertex], node_coordinates[destination]) # Calculate edge weight
                     edge_attributes['weight'].append(distance) # Put the weight in the weight list under the weight key in the same order as the weights
-                    seen_edges.add(edge) # Add this weight to seen so we don't add it again
+                    seen_edges.add(edge) # Add this weight to seen so we don't add it again                 
 except FileNotFoundError:
-    print("Ensure both coords.txt and graph.txt are present in your project directory")
+    print("Ensure both coords.txt and graph.txt are present in your project directory and formatted according to the Github documentation.")
 
 # Debugging statements to ensure graph data is stored correctly
 '''
@@ -68,7 +100,7 @@ g = igraph.Graph(
 )
 
 # All nodes should be displayed starting from 1, unlike how they are stored in our data structures
-g.vs["label"] = [str(vertex.index + 1) for vertex in g.vs] 
+g.vs["label"] = [str(vertex.index + coords_start_index) for vertex in g.vs] 
 
 
 '''
@@ -89,13 +121,13 @@ print("Find shortest bath between two nodes where certain nodes might be blocked
 print("Please provide the following inputs as instructed.")
 
 # Self explanatory, get starting node from user, repeat until a valid input is provided. 
-# Note: Input is subtracted by 1 to reflect to how it stored in the program
+# Note: Input is subtracted by starting index to reflect to how it stored in iGraph
 while True:
     try:
-        starting_node = int(input("Please enter the integer ID of your starting node (Use IDs as displayed on original_graph.png - Start Counting from 1): ")) - 1 
-        if starting_node not in range(num_nodes):
+        starting_node = int(input("Please enter the integer ID of your starting node (Use IDs as displayed on original_graph.png): ")) - coords_start_index 
+        if not(starting_node >= 0) or not(starting_node < num_nodes): 
             raise ValueError("The starting node ID provided is not in the graph.")
-        print(f"Your starting node is {starting_node + 1}")
+        print(f"Your starting node is {starting_node + coords_start_index}")
         break
     except ValueError as exception:
         print(f"Invalid input: {exception}")
@@ -103,10 +135,10 @@ while True:
 # Same as above, however we are getting the goal node.
 while True:
     try:
-        goal_node = int(input("Please enter the integer ID of your goal node: ")) - 1
-        if goal_node not in range(num_nodes):
+        goal_node = int(input("Please enter the integer ID of your goal node: ")) - coords_start_index
+        if not(goal_node >= 0) or not(goal_node < num_nodes):
             raise ValueError("The goal node ID provided is not in the graph.")
-        print(f"Your starting node is {goal_node + 1}")
+        print(f"Your starting node is {goal_node + coords_start_index}")
         break
     except ValueError as exception:
         print(f"Invalid input: {exception}")
@@ -117,16 +149,16 @@ blocked_set = set() # Blocked set is used to store which nodes are blocked for t
 # If a solution becomes impossible after enough nodes are blocked, the program will display so later
 while True:
     try:
-        blocked_node = int(input("Please enter the integer ID of the node you want to block. Enter -1 to stop blocking nodes: ")) - 1
-        if blocked_node == -2:
+        blocked_node = int(input("Please enter the integer ID of the node you want to block. Enter -1 to stop blocking nodes: ")) - coords_start_index
+        if blocked_node == (-1 - coords_start_index):
             break
-        elif blocked_node not in range(num_nodes):
+        elif not(blocked_node >= 0) or not(blocked_node < num_nodes):
             raise ValueError("This node can not be blocked because it does not exist in the graph.")
         elif blocked_node in [starting_node, goal_node]:
             raise ValueError("You can not block a starting node or a goal node.")
         else:
             blocked_set.add(blocked_node)
-            print(f"Node {blocked_node + 1} was added to the blocked set, it will not be traveled to in the constructed path.")
+            print(f"Node {blocked_node + coords_start_index} was added to the blocked set, it will not be traveled to in the constructed path.")
     except ValueError as exception:
         print(f"Invalid input: {exception}")
 
@@ -276,7 +308,7 @@ if min_complete_solution == None:
     print("A path could not be found with the existing edges and / or obstacles using this project's solution.")
 else:
     print("The following is the optimal path found by this project's implementation, in order of vertexes visited: ")
-    print([v + 1 for v in min_complete_solution]) # Add 1 back to vertex IDs so we count from 1 in displaying to user
+    print([v + coords_start_index for v in min_complete_solution]) # Add starting index back to vertex IDs so we can display to user the vertexes with the IDs they provided
     for node in min_complete_solution:
         g.vs[node]["color"] = "green" # Set nodes traveled to in solution to green for when we display the solution
     print(f"Cost: {total_path_cost}") # Total path cost calculated recursively 
@@ -294,7 +326,7 @@ for node in blocked_set:
 
 # Built in iGraph solution using Dijkstra's algorithm to verify results 
 library_solution_paths = g2.get_shortest_paths(v=starting_node, to=goal_node, weights=g2.es['weight'], output="vpath")
-first_path = [v + 1 for v in library_solution_paths[0]] # Get the path. Note: this path may be different from the one provided by A*, however total cost should be identical.
+first_path = [v + coords_start_index for v in library_solution_paths[0]] # Get the path. Note: this path may be different from the one provided by A*, however total cost should be identical.
 
 # Get cost of starting node to goal node using Dijkstra's algorithm (assuming all weights are non negative)
 library_solution_cost = g2.distances(starting_node, goal_node, weights=g2.es['weight'])
@@ -306,17 +338,19 @@ final_cost = library_solution_cost[0][0]
 # Therefore, Dijkstra could not find a solution from the start to the goal based on current obstacles.
 valid_path = True
 for node in first_path:
-    if node - 1 in blocked_set: # Subtract by one to get the actual index since iGraph indexes start at 0
+    if node - coords_start_index in blocked_set: # Subtract by start index to get the actual index since iGraph indexes start at 0
         valid_path = False # A blocked node was in the solution, set valid to false
+        break
+
 if valid_path: # If a valid path was found, print it to the user, along with it's cost
     print(f"The first path provided by the offical igraph shortest paths function (uses Dijkstra's algorithm for non negative weights): ")
     print(first_path)
     for node in first_path:
-            g2.vs[node - 1]["color"] = "green" # Set nodes traveled to in solution to green in seperate graph
+            g2.vs[node - coords_start_index]["color"] = "green" # Set nodes traveled to in solution to green in seperate graph
     print(f"Cost returned by libary solution: {final_cost}")
 else: # Otherwise, inform them it couldn't be found
     print("Solution could not be found with the existing edges or blocked obstacles using the iGraph solution.")
 
-
 # Plot the graph with the solution if any, otherwise print original graph with blocked nodes
 igraph.plot(g2, "graph_visualizations/official_igraph_solution.png")
+
