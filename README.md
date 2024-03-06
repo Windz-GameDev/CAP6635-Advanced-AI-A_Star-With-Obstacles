@@ -4,11 +4,11 @@ This Python project does the following
   - Reads the x-y coordinates of the nodes from a text file called "coords.txt".
   - Reads an adjacency list of an undirected graph from a text file called "graph.txt" in the project directory. This is used to create the edges.
     -- Note: If an edge includes a point in graph.txt, coordinates for that point must exist in coords.txt!
-  - Uses the iGraph library for Python to create the graph
-  - Node IDs are integers
-  - Edge weights are calculated based on the nodes' coordinates or the Euclidean distance between two nodes
+  - Uses the iGraph library for Python to create the graph.
+  - Node IDs are 0 and positive integers.
+  - Edge weights are calculated based on the nodes' coordinates or the Euclidean distance between two nodes.
   - If there is an edge between nodes a and b, an edge is not added for b and a.
-  - The program also displays the graph using matplotlib
+  - The program also displays the graph using matplotlib.
   - The program implements the A* algorithm, allowing the user to find the shortest path between two nodes on the graph. Additionally, the user can block nodes to represent real-world obstacles.
 
 Set up
@@ -32,11 +32,16 @@ Set up
 
 Preparing Your Data
 - Prepare two text files in the project directory: coords.txt for node coordinates and graph.txt, which is formatted as an adjacency list.
-- The coords.txt file should list each node's ID followed by its x and y coordinates, separated by spaces. Start counting nodes from 1.
-- The graph.txt file should list each node's ID followed by the IDs of nodes it is connected to, representing the graph's edges.
+- The coords.txt file should list each node's ID followed by its x and y coordinates, separated by spaces. Start counting nodes from 0 or greater.
+- The graph.txt file should list the node IDs followed by the IDs of nodes it is connected to, representing the graph's edges.
+- If you have an edge from x -> y in graph.txt, you don't need another edge for y -> x
 - Note: Vertex IDs must be integers, or you will run into issues. X and Y coordinates may be floats or integers.
 
-Your graph and coords text files should look like the following: notice we start counting nodes from 1. Note: Do not count from 0 in your input.
+
+Your graph and coords text files should look like the following: 
+
+Note: In the coordinates file, you may start from 0 or any positive integer, as long as Vertex IDs are sequential by line. Additionally, vertexes must be defined in the coords file before an edge can be placed between it and another 
+vertex in the graph file.
   
 ![Coordinate File Example](coords_file_example.png "Coords File Example")
   
@@ -58,10 +63,12 @@ Viewing the Results
 Troubleshooting
 - Ensure that all node IDs in graph.txt have corresponding coordinates in coords.txt.
 - If the program cannot find a path, verify that the starting and goal nodes are connected and that not too many nodes are blocked.
-- Ensure vertex indexes start counting from 1 in your input files.
+- Ensure vertex indexes start counting from 0 or greater in your input files.
+- In coords.txt, ensure each Vertex ID is one greater than the vertex ID of the previous line.
+- If you reference a vertex in graph.txt, ensure it's location is defined in coords.txt.
 - When choosing which nodes to start from, end on, or block, ensure you enter their IDs as displayed in `original_graph.png`.
 
-Acknowledgements 
+My Acknowledgements and Gratitude Goes To
 - My professor, Dr. Ayan Dutta for introducing me to A* during class, answering my questions, and providing valuable suggestions for optimizing my implementation.
 - The following free MIT video on Youtube from Patrick Winston, was extremely helpful for further understanding the logic behind A*, and was used as a reference as I was writing the logic for the A* code.
   - https://www.youtube.com/watch?v=gGQ-vAmdAOI&t=2306s
