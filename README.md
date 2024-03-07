@@ -51,7 +51,7 @@ Running the Program
 - With your virtual environment activated and the required text files prepared, run the program using:
   - `python main.py`
 - See below image for an example of how to use the program
-  - ![Advanced AI - Running Example](Advanced_AI_Running_Example.png "Advanced AI - Running Example")
+  - ![Advanced AI - Running Example](example_of_running_program.png.png "Advanced AI - Running Example")
 
 Viewing the Results
 - After running the program, check the `graph_visualizations` folder in the project directory for the generated visualization images. These images will show the original graph and the calculated shortest path.
